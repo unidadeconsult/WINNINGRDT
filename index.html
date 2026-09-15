@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>RDT Betting Center</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- HEADER -->
+        <header class="rdt-header">
+            <div class="header-left">
+                <div class="rdt-logo">
+                    <div class="logo-icon">RDT</div>
+                    <div class="logo-text">
+                        <span class="logo-title">RDT BETTING CENTER</span>
+                        <span class="logo-subtitle">Central de Inteligncia Esportiva</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">DASHBOARD</a>
+                <a href="#" class="nav-item" data-page="central-dia">CENTRAL DO DIA</a>
+                <a href="#" class="nav-item" data-page="entradas">ENTRADAS</a>
+                <a href="#" class="nav-item" data-page="analises">ANLISES</a>
+                <a href="#" class="nav-item" data-page="fomo">FOMO</a>
+                <a href="#" class="nav-item" data-page="especialistas">ESPECIALISTAS</a>
+                <a href="#" class="nav-item" data-page="ranking">RANKING</a>
+                <a href="#" class="nav-item" data-page="mercados">MERCADOS</a>
+                <a href="#" class="nav-item" data-page="calendario">CALENDRIO</a>
+                <a href="#" class="nav-item" data-page="diario">DIRIO DH</a>
+                <a href="#" class="nav-item" data-page="pesquisa">PESQUISA</a>
+            </nav>
+            <div class="header-right">
+                <div class="banca-display">
+                    <span class="banca-label">BANCA</span>
+                    <span class="banca-value" id="header-banca">R$ 5.000,00</span>
+                </div>
+                <button class="btn-nova-entrada" id="btn-nova-entrada">+ NOVA ENTRADA</button>
+                <button class="btn-entrada-rapida" id="btn-entrada-rapida" title="Entrada Rpida">&#9889;</button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="rdt-main" id="main-content">
+            <!-- Pages rendered dynamically -->
+        </main>
+
+        <!-- ATENÇÃO RDT - TICKER BAR -->
+        <footer class="rdt-ticker" id="rdt-ticker">
+            <div class="ticker-label">
+                <span class="ticker-live-dot"></span>
+                <span>ATENO RDT</span>
+            </div>
+            <div class="ticker-content">
+                <div class="ticker-track" id="ticker-track">
+                    <span class="ticker-placeholder">Nenhuma aposta em observao no momento</span>
+                </div>
+            </div>
+            <div class="ticker-badge">
+                <span class="live-badge">RDT AO VIVO</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODAL: NOVA ENTRADA -->
+    <div class="modal-overlay" id="modal-nova-entrada">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>NOVA ENTRADA</h2>
+                <button class="modal-close" data-close="modal-nova-entrada">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="entry-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Horrio</label>
+                        <input type="time" id="entry-time">
+                    </div>
+                    <div class="form-group">
+                        <label>Esporte</label>
+                        <select id="entry-sport">
+                            <option value="futebol">Futebol</option>
+                            <option value="basquete">Basquete</option>
+                            <option value="tenis">Tnis</option>
+                            <option value="mma">MMA</option>
+                            <option value="esports">eSports</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Campeonato</label>
+                        <input type="text" id="entry-championship" placeholder="Ex: Premier League">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Jogo / Evento</label>
+                        <input type="text" id="entry-match" placeholder="Ex: Liverpool x Atltico">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="entry-type">
+                            <option value="pre-jogo">Pr-jogo</option>
+                            <option value="ao-vivo">Ao vivo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Grupo</label>
+                        <select id="entry-group"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Participante / Tipster</label>
+                        <select id="entry-participant"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mercado</label>
+                        <input type="text" id="entry-market" placeholder="Ex: Over 2.5 gols">
+                    </div>
+                    <div class="form-group">
+                        <label>Seleo</label>
+                        <input type="text" id="entry-selection" placeholder="Ex: Over">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd</label>
+                        <input type="number" id="entry-odd" step="0.01" min="1" placeholder="1.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Unidades</label>
+                        <input type="number" id="entry-units" step="0.1" min="0" placeholder="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor em R$</label>
+                        <input type="number" id="entry-value" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="entry-status">
+                            <option value="pendente">Pendente</option>
+                            <option value="green">Green</option>
+                            <option value="red">Red</option>
+                            <option value="void">Void</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="entry-state">
+                            <option value="executada">Executada</option>
+                            <option value="indicada">Indicada</option>
+                            <option value="descartada">Descartada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Confiana (1-5)</label>
+                        <div class="confidence-selector" id="entry-confidence">
+                            <span class="conf-dot" data-val="1">1</span>
+                            <span class="conf-dot" data-val="2">2</span>
+                            <span class="conf-dot active" data-val="3">3</span>
+                            <span class="conf-dot" data-val="4">4</span>
+                            <span class="conf-dot" data-val="5">5</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Odd quando analisamos</label>
+                        <input type="number" id="entry-odd-analyzed" step="0.01" min="1" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label>Melhor odd encontrada</label>
+                        <input type="number" id="entry-odd-best" step="0.01" min="1" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd de fechamento</label>
+                        <input type="number" id="entry-odd-closing" step="0.01" min="1" placeholder="">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Anlise / Justificativa</label>
+                        <textarea id="entry-analysis" rows="3" placeholder="Justificativa da entrada..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Tags</label>
+                        <input type="text" id="entry-tags" placeholder="Ex: #VALOR #AO_VIVO #ALTA_CONVICO">
+                    </div>
+                    <div class="form-group">
+                        <label>Link</label>
+                        <input type="text" id="entry-link" placeholder="URL">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="entry-attention">
+                            Colocar em ATENO DO DIA
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-nova-entrada">Cancelar</button>
+                <button class="btn-primary" id="btn-save-entry">REGISTRAR ENTRADA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ENTRADA RÁPIDA -->
+    <div class="modal-overlay" id="modal-entrada-rapida">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>&#9889; ENTRADA RPIDA</h2>
+                <button class="modal-close" data-close="modal-entrada-rapida">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Jogo</label>
+                        <input type="text" id="quick-match" placeholder="Ex: Liverpool x Atltico" autofocus>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Mercado</label>
+                        <input type="text" id="quick-market" placeholder="Ex: Over 2.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd</label>
+                        <input type="number" id="quick-odd" step="0.01" min="1" placeholder="1.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Unidades</label>
+                        <input type="number" id="quick-units" step="0.1" min="0" placeholder="0.5">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Grupo</label>
+                        <select id="quick-group"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary btn-full" id="btn-quick-save">REGISTRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FOMO -->
+    <div class="modal-overlay" id="modal-fomo">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>REGISTRAR FOMO</h2>
+                <button class="modal-close" data-close="modal-fomo">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Jogo</label>
+                        <input type="text" id="fomo-match" placeholder="Ex: Real Madrid x Barcelona">
+                    </div>
+                    <div class="form-group">
+                        <label>Mercado</label>
+                        <input type="text" id="fomo-market" placeholder="Ex: ML">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd disponvel</label>
+                        <input type="number" id="fomo-odd" step="0.01" min="1" placeholder="1.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Unidades pensadas</label>
+                        <input type="number" id="fomo-units" step="0.1" min="0" placeholder="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Grupo relacionado</label>
+                        <select id="fomo-group"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quem indicou</label>
+                        <input type="text" id="fomo-source" placeholder="">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Motivo da vontade de entrar</label>
+                        <textarea id="fomo-reason-enter" rows="2"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Motivo de NO entrar</label>
+                        <textarea id="fomo-reason-skip" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Nvel de vontade (1-5)</label>
+                        <div class="confidence-selector" id="fomo-desire">
+                            <span class="conf-dot" data-val="1">1</span>
+                            <span class="conf-dot" data-val="2">2</span>
+                            <span class="conf-dot active" data-val="3">3</span>
+                            <span class="conf-dot" data-val="4">4</span>
+                            <span class="conf-dot" data-val="5">5</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Resultado posterior</label>
+                        <select id="fomo-result">
+                            <option value="pendente">Aguardando</option>
+                            <option value="green">Teria sido GREEN</option>
+                            <option value="red">Teria sido RED</option>
+                            <option value="void">Teria sido VOID</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>O que aprendemos com essa deciso?</label>
+                        <textarea id="fomo-lesson" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-fomo">Cancelar</button>
+                <button class="btn-primary" id="btn-save-fomo">REGISTRAR FOMO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ANÁLISE -->
+    <div class="modal-overlay" id="modal-analise">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>NOVA ANLISE</h2>
+                <button class="modal-close" data-close="modal-analise">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Jogo</label>
+                        <input type="text" id="analysis-match" placeholder="Ex: Liverpool x Atltico">
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="analysis-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Campeonato</label>
+                        <input type="text" id="analysis-championship" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label>Mercado analisado</label>
+                        <input type="text" id="analysis-market" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd disponvel</label>
+                        <input type="number" id="analysis-odd" step="0.01" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd considerada justa</label>
+                        <input type="number" id="analysis-fair-odd" step="0.01" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Probabilidade estimada (%)</label>
+                        <input type="number" id="analysis-probability" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Risco</label>
+                        <select id="analysis-risk">
+                            <option value="baixo">Baixo</option>
+                            <option value="moderado">Moderado</option>
+                            <option value="alto">Alto</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Contexto</label>
+                        <textarea id="analysis-context" rows="2"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Argumentos favorveis</label>
+                        <textarea id="analysis-pros" rows="2"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Argumentos contrrios</label>
+                        <textarea id="analysis-cons" rows="2"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Concluso</label>
+                        <textarea id="analysis-conclusion" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Deciso</label>
+                        <select id="analysis-decision">
+                            <option value="entrar">ENTRAR</option>
+                            <option value="aguardar">AGUARDAR</option>
+                            <option value="ao-vivo">AO VIVO</option>
+                            <option value="nao-entrar">NO ENTRAR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Odd mnima para entrada</label>
+                        <input type="number" id="analysis-min-odd" step="0.01" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Odd ideal</label>
+                        <input type="number" id="analysis-ideal-odd" step="0.01" min="1">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-analise">Cancelar</button>
+                <button class="btn-primary" id="btn-save-analysis">REGISTRAR ANLISE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DIÁRIO -->
+    <div class="modal-overlay" id="modal-diario">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>DIRIO DH</h2>
+                <button class="modal-close" data-close="modal-diario">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Anotao</label>
+                        <textarea id="diary-note" rows="4" placeholder="O que voc est pensando agora?"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Relacionar a (opcional)</label>
+                        <input type="text" id="diary-related" placeholder="Jogo, aposta, anlise...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary btn-full" id="btn-save-diary">REGISTRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHES DA ENTRADA -->
+    <div class="modal-overlay" id="modal-entry-detail">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>DETALHES DA ENTRADA</h2>
+                <button class="modal-close" data-close="modal-entry-detail">&times;</button>
+            </div>
+            <div class="modal-body" id="entry-detail-content">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-entry-detail">Fechar</button>
+                <button class="btn-warning" id="btn-edit-entry">Editar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PARTICIPANTE -->
+    <div class="modal-overlay" id="modal-participante">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>NOVO PARTICIPANTE</h2>
+                <button class="modal-close" data-close="modal-participante">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="part-name" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label>Apelido / Funo</label>
+                        <input type="text" id="part-alias" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label>Grupo</label>
+                        <select id="part-group"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Especialidade</label>
+                        <input type="text" id="part-specialty" placeholder="Ex: Preo, Ttica, Risco">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-participante">Cancelar</button>
+                <button class="btn-primary" id="btn-save-participant">REGISTRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GRUPO -->
+    <div class="modal-overlay" id="modal-grupo">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>NOVO GRUPO</h2>
+                <button class="modal-close" data-close="modal-grupo">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Nome do Grupo</label>
+                        <input type="text" id="group-name" placeholder="">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-grupo">Cancelar</button>
+                <button class="btn-primary" id="btn-save-group">REGISTRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BANCA -->
+    <div class="modal-overlay" id="modal-banca">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>CONFIGURAR BANCA</h2>
+                <button class="modal-close" data-close="modal-banca">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Banca Inicial (R$)</label>
+                        <input type="number" id="banca-initial" step="0.01" min="0" placeholder="5000">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Valor de 1 Unidade (R$)</label>
+                        <input type="number" id="banca-unit" step="0.01" min="0" placeholder="50">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-banca">Cancelar</button>
+                <button class="btn-primary" id="btn-save-banca">SALVAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ENCERRAR DIA -->
+    <div class="modal-overlay" id="modal-encerrar-dia">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>RESUMO DO DIA</h2>
+                <button class="modal-close" data-close="modal-encerrar-dia">&times;</button>
+            </div>
+            <div class="modal-body" id="resumo-dia-content">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" data-close="modal-encerrar-dia">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/db.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/pages.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+@media (max-width: 1200px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr 300px;
+    }
+    .central-dia-layout {
+        grid-template-columns: 1fr 280px;
+    }
+}
+
+@media (max-width: 960px) {
+    .rdt-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .header-nav {
+        order: 3;
+        width: 100%;
+        padding-bottom: 4px;
+    }
+
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .central-dia-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-stats {
+        margin-left: 0;
+    }
+
+    .sub-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    html { font-size: 13px; }
+
+    .header-right {
+        gap: 8px;
+    }
+
+    .logo-text { display: none; }
+
+    .nav-item {
+        font-size: 0.65rem;
+        padding: 5px 8px;
+    }
+
+    .rdt-main {
+        padding: 10px;
+        padding-bottom: 52px;
+    }
+
+    .stats-strip {
+        gap: 6px;
+    }
+
+    .stat-card {
+        min-width: 110px;
+        padding: 8px 12px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1rem;
+    }
+
+    .specialists-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .mercados-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width {
+        grid-column: 1;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .placar-rdt {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .calendar-grid {
+        font-size: 0.6rem;
+    }
+
+    .cal-day {
+        min-height: 50px;
+        padding: 4px;
+    }
+
+    .ranking-stats {
+        gap: 10px;
+    }
+
+    .conselho-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+    }
+
+    .exposure-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .drawdown-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-content {
+        max-height: 95vh;
+    }
+
+    .btn-nova-entrada {
+        padding: 6px 12px;
+        font-size: 0.65rem;
+    }
+}
