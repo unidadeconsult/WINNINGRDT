@@ -1025,9 +1025,10 @@ const U={
   cur(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})},
   units(v){const n=Number(v||0);return(n>=0?'+':'')+n.toFixed(2)+'u'},
   pct(v){const n=Number(v||0);return(n>=0?'+':'')+n.toFixed(1)+'%'},
-  fdate(d){if(!d)return'';return new Date(d).toLocaleDateString('pt-BR')},
-  fdatetime(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('pt-BR')+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})},
-  today(){return new Date().toISOString().split('T')[0]},
+  parseLocal(d){if(!d)return null;if(d.length===10&&d[4]==='-'){const p=d.split('-');return new Date(+p[0],p[1]-1,+p[2])}return new Date(d)},
+  fdate(d){if(!d)return'';const dt=this.parseLocal(d);return dt.toLocaleDateString('pt-BR')},
+  fdatetime(d){if(!d)return'';const dt=this.parseLocal(d);return dt.toLocaleDateString('pt-BR')+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})},
+  today(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')},
   profit(e){if(!e)return 0;const u=Number(e.units)||0,o=Number(e.odd)||0;if(e.status==='green')return u*(o-1);if(e.status==='red')return -u;return 0},
   roi(list){const r=list.filter(e=>e.status==='green'||e.status==='red');if(!r.length)return 0;const s=r.reduce((a,e)=>a+(Number(e.units)||0),0);if(!s)return 0;return(r.reduce((a,e)=>a+this.profit(e),0)/s)*100},
   wr(list){const r=list.filter(e=>e.status==='green'||e.status==='red');if(!r.length)return 0;return(r.filter(e=>e.status==='green').length/r.length)*100},
@@ -1035,7 +1036,7 @@ const U={
   totalU(list){return list.reduce((a,e)=>a+this.profit(e),0)},
   filterPeriod(list,p){
     const now=new Date(),td=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    return list.filter(e=>{const d=new Date(e.date||e.createdAt);
+    return list.filter(e=>{const d=this.parseLocal(e.date||e.createdAt);
       if(p==='hoje')return d>=td;
       if(p==='ontem'){const y=new Date(td);y.setDate(y.getDate()-1);return d>=y&&d<td}
       if(p==='7d'){const w=new Date(td);w.setDate(w.getDate()-7);return d>=w}
