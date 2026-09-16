@@ -1153,12 +1153,19 @@ const App={
     document.getElementById('btn-save-group').onclick=()=>this.saveGroup();
     document.getElementById('p-avatar-input').onchange=(ev)=>{
       const f=ev.target.files[0];if(!f)return;
-      if(f.size>512000){U.toast('Imagem muito grande (máx 500KB)','err');return}
-      const r=new FileReader();r.onload=e=>{
-        document.getElementById('p-avatar-data').value=e.target.result;
+      if(f.size>10485760){U.toast('Imagem muito grande (máx 10MB)','err');return}
+      const img=new Image();const url=URL.createObjectURL(f);
+      img.onload=()=>{
+        const max=256,w=img.width,h=img.height;
+        let nw=w,nh=h;if(w>max||h>max){if(w>h){nw=max;nh=Math.round(h*max/w)}else{nh=max;nw=Math.round(w*max/h)}}
+        const cv=document.createElement('canvas');cv.width=nw;cv.height=nh;
+        cv.getContext('2d').drawImage(img,0,0,nw,nh);
+        const data=cv.toDataURL('image/jpeg',0.85);
+        URL.revokeObjectURL(url);
+        document.getElementById('p-avatar-data').value=data;
         const pv=document.getElementById('p-av-preview');
-        pv.innerHTML='<img src="'+e.target.result+'" class="avatar-img">';pv.style.background='none';pv.style.borderStyle='solid';
-      };r.readAsDataURL(f);
+        pv.innerHTML='<img src="'+data+'" class="avatar-img">';pv.style.background='none';pv.style.borderStyle='solid';
+      };img.src=url;
     };
     document.getElementById('btn-backup').onclick=()=>this.openBackup();
     document.getElementById('btn-backup-export').onclick=()=>this.backupExport();
