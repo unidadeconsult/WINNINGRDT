@@ -486,6 +486,30 @@ body {
   font-family: var(--font-display); font-size: 9px; font-weight: 400;
   letter-spacing: 0.5px; color: var(--accent); margin-bottom: 6px;
 }
+.spec-card { position: relative; }
+.spec-edit {
+  position: absolute; top: 6px; right: 6px; background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: 3px; color: var(--text-muted);
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 11px; opacity: 0; transition: opacity 0.15s;
+}
+.spec-card:hover .spec-edit { opacity: 1; }
+.spec-edit:hover { color: var(--accent); border-color: var(--accent); }
+.av-upload {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.av-preview {
+  width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  color: #fff; cursor: pointer; border: 2px dashed var(--border);
+  transition: border-color 0.2s; background-size: cover; background-position: center;
+}
+.av-preview:hover { border-color: var(--accent); }
+.av-preview img { width: 100%; height: 100%; object-fit: cover; }
+.av-hint { font-size: 9px; color: var(--text-muted); }
+.avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .spec-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; }
 .spec-stat { text-align: center; }
 .spec-stat .sv { font-family: var(--font-body); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -862,12 +886,21 @@ body {
   <div class="fld full"><label>VALOR DE 1 UNIDADE (R$)</label><input type="number" id="b-unit" step="0.01" min="0" placeholder="50"></div>
 </div></div><div class="modal-ft"><button class="btn-ghost" data-cl="m-banca">Cancelar</button><button class="btn-accent" id="btn-save-banca">SALVAR</button></div></div></div>
 
-<div class="modal-bg" id="m-participant"><div class="modal modal-sm"><div class="modal-hd"><h2>NOVO PARTICIPANTE</h2><button class="modal-close" data-cl="m-participant">&times;</button></div><div class="modal-bd"><div class="fg">
+<div class="modal-bg" id="m-participant"><div class="modal modal-sm"><div class="modal-hd"><h2 id="part-modal-title">NOVO PARTICIPANTE</h2><button class="modal-close" data-cl="m-participant">&times;</button></div><div class="modal-bd"><div class="fg">
+  <div class="fld full">
+    <div class="av-upload">
+      <div class="av-preview" id="p-av-preview" onclick="document.getElementById('p-avatar-input').click()"></div>
+      <input type="file" id="p-avatar-input" accept="image/*" style="display:none">
+      <div class="av-hint">Clique para escolher avatar</div>
+    </div>
+  </div>
   <div class="fld"><label>NOME</label><input type="text" id="p-name"></div>
   <div class="fld"><label>APELIDO / FUNÇÃO</label><input type="text" id="p-alias"></div>
   <div class="fld"><label>GRUPO</label><select id="p-group"></select></div>
   <div class="fld"><label>ESPECIALIDADE</label><input type="text" id="p-spec"></div>
-</div></div><div class="modal-ft"><button class="btn-ghost" data-cl="m-participant">Cancelar</button><button class="btn-accent" id="btn-save-part">REGISTRAR</button></div></div></div>
+  <input type="hidden" id="p-edit-id">
+  <input type="hidden" id="p-avatar-data">
+</div></div><div class="modal-ft"><button class="btn-ghost" id="btn-del-part" style="color:var(--red-live);border-color:var(--red-live);display:none">Excluir</button><button class="btn-ghost" data-cl="m-participant">Cancelar</button><button class="btn-accent" id="btn-save-part">REGISTRAR</button></div></div></div>
 
 <div class="modal-bg" id="m-group"><div class="modal modal-sm"><div class="modal-hd"><h2>NOVO GRUPO</h2><button class="modal-close" data-cl="m-group">&times;</button></div><div class="modal-bd"><div class="fg">
   <div class="fld full"><label>NOME DO GRUPO</label><input type="text" id="g-name"></div>
@@ -969,6 +1002,8 @@ const DB={
   },
   saveParticipants(p){this._s('participants',p)},
   addParticipant(o){const p=this.participants();o.id='p-'+Date.now();o.av=o.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();p.push(o);this.saveParticipants(p);return o},
+  updateParticipant(id,u){const p=this.participants();const i=p.findIndex(x=>x.id===id);if(i<0)return;Object.assign(p[i],u);p[i].av=p[i].name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();this.saveParticipants(p);return p[i]},
+  deleteParticipant(id){const p=this.participants();const i=p.findIndex(x=>x.id===id);if(i<0)return false;p.splice(i,1);this.saveParticipants(p);return true},
   entries(){return this._g('entries')||[]},
   saveEntries(e){this._s('entries',e)},
   addEntry(e){const l=this.entries();e.id='e-'+Date.now()+'-'+Math.random().toString(36).substr(2,4);e.createdAt=new Date().toISOString();e.history=[{a:'Entrada criada',t:new Date().toISOString()}];l.unshift(e);this.saveEntries(l);return e},
@@ -1012,6 +1047,7 @@ const U={
   oddRange(o){const n=Number(o);if(n<1.5)return'1.01-1.49';if(n<1.7)return'1.50-1.69';if(n<1.9)return'1.70-1.89';if(n<2.2)return'1.90-2.19';if(n<3)return'2.20-2.99';return'3.00+'},
   phase(list){const r=list.filter(e=>e.status==='green'||e.status==='red').slice(0,10);if(r.length<3)return'neutral';const w=this.wr(r);return w>=60?'good':w<=35?'bad':'neutral'},
   avColor(id){const c=['linear-gradient(135deg,#1565C0,#0097A7)','linear-gradient(135deg,#6A1B9A,#C2185B)','linear-gradient(135deg,#C62828,#E65100)','linear-gradient(135deg,#00695C,#0097A7)','linear-gradient(135deg,#E65100,#F9A825)','linear-gradient(135deg,#283593,#1565C0)','linear-gradient(135deg,#00695C,#2E7D32)','linear-gradient(135deg,#AD1457,#6A1B9A)','linear-gradient(135deg,#E65100,#F9A825)','linear-gradient(135deg,#00838F,#1565C0)','linear-gradient(135deg,#6A1B9A,#283593)','linear-gradient(135deg,#558B2F,#00695C)'];let h=0;for(let i=0;i<(id||'').length;i++)h=((h<<5)-h)+(id||'').charCodeAt(i);return c[Math.abs(h)%c.length]},
+  avHtml(p,size){const s=size||32;if(p&&p.avatar)return'<img src="'+p.avatar+'" class="avatar-img" style="width:'+s+'px;height:'+s+'px">';return(p?p.av:'??')},
   stClass(s){return{green:'st-green',red:'st-red',void:'st-void',pendente:'st-pend'}[s]||'st-pend'},
   stLabel(s){return{green:'GREEN',red:'RED',void:'VOID',pendente:'PENDENTE'}[s]||'PENDENTE'},
   toast(msg,type='ok'){const c=document.getElementById('toasts');const t=document.createElement('div');t.className='toast toast-'+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3000)},
@@ -1112,7 +1148,17 @@ const App={
     document.getElementById('btn-save-diary').onclick=()=>this.saveDiary();
     document.getElementById('btn-save-banca').onclick=()=>this.saveBanca();
     document.getElementById('btn-save-part').onclick=()=>this.savePart();
+    document.getElementById('btn-del-part').onclick=()=>this.deletePart();
     document.getElementById('btn-save-group').onclick=()=>this.saveGroup();
+    document.getElementById('p-avatar-input').onchange=(ev)=>{
+      const f=ev.target.files[0];if(!f)return;
+      if(f.size>512000){U.toast('Imagem muito grande (máx 500KB)','err');return}
+      const r=new FileReader();r.onload=e=>{
+        document.getElementById('p-avatar-data').value=e.target.result;
+        const pv=document.getElementById('p-av-preview');
+        pv.innerHTML='<img src="'+e.target.result+'" class="avatar-img">';pv.style.background='none';pv.style.borderStyle='solid';
+      };r.readAsDataURL(f);
+    };
     document.getElementById('btn-backup').onclick=()=>this.openBackup();
     document.getElementById('btn-backup-export').onclick=()=>this.backupExport();
     document.getElementById('btn-backup-copy').onclick=()=>this.backupCopy();
@@ -1128,9 +1174,10 @@ const App={
     document.querySelectorAll('[data-cl]').forEach(b=>b.onclick=()=>this.closeM(b.dataset.cl));
     document.querySelectorAll('.modal-bg').forEach(m=>m.onclick=e=>{if(e.target===m)this.closeM(m.id)});
   },
-  openM(id){const m=document.getElementById(id);if(!m)return;m.classList.add('show');this.fillDrops();if(id==='m-entry'){document.getElementById('e-date').value=U.today();document.getElementById('e-time').value=new Date().toTimeString().slice(0,5)}},
+  openM(id){const m=document.getElementById(id);if(!m)return;m.classList.add('show');this.fillDrops();if(id==='m-entry'){document.getElementById('e-date').value=U.today();document.getElementById('e-time').value=new Date().toTimeString().slice(0,5)}
+    if(id==='m-participant'&&!document.getElementById('p-edit-id').value){document.getElementById('part-modal-title').textContent='NOVO PARTICIPANTE';document.getElementById('btn-save-part').textContent='REGISTRAR';document.getElementById('btn-del-part').style.display='none';const pv=document.getElementById('p-av-preview');pv.innerHTML='&#128247;';pv.style.background='var(--bg-card)';pv.style.borderStyle='dashed';document.getElementById('p-avatar-data').value=''}},
   closeM(id){const m=document.getElementById(id);if(m)m.classList.remove('show')},
-  clearM(id){const m=document.getElementById(id);if(!m)return;m.querySelectorAll('input:not([type=checkbox])').forEach(i=>i.value='');m.querySelectorAll('textarea').forEach(t=>t.value='');m.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);m.querySelectorAll('select').forEach(s=>s.selectedIndex=0)},
+  clearM(id){const m=document.getElementById(id);if(!m)return;m.querySelectorAll('input:not([type=checkbox]):not([type=hidden]):not([type=file])').forEach(i=>i.value='');m.querySelectorAll('textarea').forEach(t=>t.value='');m.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);m.querySelectorAll('select').forEach(s=>s.selectedIndex=0);if(id==='m-participant'){document.getElementById('p-edit-id').value='';document.getElementById('p-avatar-data').value='';document.getElementById('p-avatar-input').value=''}},
   fillDrops(){
     const gs=DB.groups(),ps=DB.participants();
     ['e-group','q-group','f-group','p-group'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=gs.map(g=>'<option value="'+g.id+'">'+g.name+'</option>').join('')});
@@ -1227,8 +1274,9 @@ const App={
     let f=entries;if(gf!=='todos')f=f.filter(e=>e.group===gf);if(pf!=='todos')f=U.filterPeriod(f,pf);
     if(!f.length)return'<div class="empty"><div class="empty-text">Nenhuma entrada</div></div>';
     const ps=DB.participants();
-    return f.slice(0,50).map(e=>{const p=ps.find(pp=>pp.id===e.participant);const nm=p?p.name:(e.participant||'');const av=p?p.av:'??';
-      return`<div class="ecard" data-eid="${e.id}"><div class="avatar" style="background:${U.avColor(p?p.id:'')}">${av}</div><div class="ecard-info"><div class="ecard-name">${nm}</div><div class="ecard-match">${e.match||''}</div><div class="ecard-meta"><span>${e.market||''}</span><span>@${Number(e.odd||0).toFixed(2)}</span><span>${Number(e.units||0).toFixed(1)}u</span></div></div><div class="status-tag ${U.stClass(e.status)}">${U.stLabel(e.status)}</div></div>`}).join('')
+    return f.slice(0,50).map(e=>{const p=ps.find(pp=>pp.id===e.participant);const nm=p?p.name:(e.participant||'');
+      const avInner=p&&p.avatar?'<img src="'+p.avatar+'" class="avatar-img" style="width:32px;height:32px">':(p?p.av:'??');
+      return`<div class="ecard" data-eid="${e.id}"><div class="avatar" style="background:${p&&p.avatar?'none':U.avColor(p?p.id:'')}">${avInner}</div><div class="ecard-info"><div class="ecard-name">${nm}</div><div class="ecard-match">${e.match||''}</div><div class="ecard-meta"><span>${e.market||''}</span><span>@${Number(e.odd||0).toFixed(2)}</span><span>${Number(e.units||0).toFixed(1)}u</span></div></div><div class="status-tag ${U.stClass(e.status)}">${U.stLabel(e.status)}</div></div>`}).join('')
   },
   pgCentral(){
     const ent=DB.entries().filter(e=>e.state!=='descartada');const td=U.filterPeriod(ent,'hoje');
@@ -1288,25 +1336,30 @@ const App={
       ${fs.map(f=>{let cl='PENDENTE',cc='st-pend';if(f.result==='red'){cl='FOMO EVITADO';cc='st-green'}else if(f.result==='green'){cl='OPORTUNIDADE PERDIDA';cc='st-pend'}else if(f.result==='void'){cl='NEUTRO';cc='st-void'}
         return`<div class="fomo-card"><div class="fomo-hd"><h3>${f.match||''}</h3><span class="status-tag ${cc}">${cl}</span></div><div class="fomo-meta"><span>${f.market||''}</span><span>Odd: ${Number(f.odd||0).toFixed(2)}</span><span>${Number(f.units||0).toFixed(1)}u pensadas</span><span>Vontade: ${f.desire||3}/5</span></div>${f.reasonIn?`<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">Queria entrar: ${f.reasonIn}</div>`:'' }${f.reasonOut?`<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">No entrou: ${f.reasonOut}</div>`:'' }${f.lesson?`<div class="fomo-lesson">${f.lesson}</div>`:'' }</div>`}).join('')}</div>`;
   },
+  specCard(p,ent){
+    const pe=ent.filter(e=>e.participant===p.id);const ph=U.phase(pe);
+    const avInner=p.avatar?'<img src="'+p.avatar+'" class="avatar-img" style="width:44px;height:44px">':p.av;
+    return`<div class="spec-card" data-pid="${p.id}"><button class="spec-edit" data-edit-pid="${p.id}" title="Editar">&#9998;</button><div class="spec-avatar" style="background:${p.avatar?'none':U.avColor(p.id)}">${avInner}<span class="phase ph-${ph}"></span></div><div class="spec-name">${p.name}</div><div class="spec-alias">${p.alias||p.spec||''}</div><div class="spec-stats"><div class="spec-stat"><div class="sv">${pe.length}</div><div class="sl">ENTRADAS</div></div><div class="spec-stat"><div class="sv" style="color:${U.roi(pe)>=0?'var(--green)':'var(--red)'}">${U.pct(U.roi(pe))}</div><div class="sl">ROI</div></div></div></div>`;
+  },
   pgEspec(){
     const ps=DB.participants(),ent=DB.entries().filter(e=>e.state!=='descartada'),gs=DB.groups();
     const conselho=ps.filter(p=>p.group==='conselho-rdt');
     return`<div><div class="page-hd"><div class="page-title">ESPECIALISTAS</div><div class="page-actions"><button class="btn-ghost btn-sm" id="btn-new-grp">+ NOVO GRUPO</button><button class="btn-accent" id="btn-new-part">+ NOVO PARTICIPANTE</button></div></div>
       <div style="margin-bottom:20px"><div style="font-family:var(--font-display);font-size:12px;letter-spacing:1.5px;color:var(--accent);margin-bottom:10px">CONSELHO SHARKS</div>
-        <div class="spec-grid">${conselho.map(p=>{const pe=ent.filter(e=>e.participant===p.id);const ph=U.phase(pe);return`<div class="spec-card" data-pid="${p.id}"><div class="spec-avatar" style="background:${U.avColor(p.id)}">${p.av}<span class="phase ph-${ph}"></span></div><div class="spec-name">${p.name}</div><div class="spec-alias">${p.alias||p.spec||''}</div><div class="spec-stats"><div class="spec-stat"><div class="sv">${pe.length}</div><div class="sl">ENTRADAS</div></div><div class="spec-stat"><div class="sv" style="color:${U.roi(pe)>=0?'var(--green)':'var(--red)'}">${U.pct(U.roi(pe))}</div><div class="sl">ROI</div></div></div></div>`}).join('')}</div>
+        <div class="spec-grid">${conselho.map(p=>this.specCard(p,ent)).join('')}</div>
       </div>
-      ${gs.filter(g=>g.id!=='conselho-rdt').map(g=>{const gp=ps.filter(p=>p.group===g.id);return`<div style="margin-bottom:20px"><div style="font-family:var(--font-display);font-size:12px;letter-spacing:1.5px;color:var(--accent);margin-bottom:10px">${g.name}</div>${gp.length?`<div class="spec-grid">${gp.map(p=>{const pe=ent.filter(e=>e.participant===p.id);const ph=U.phase(pe);return`<div class="spec-card" data-pid="${p.id}"><div class="spec-avatar" style="background:${U.avColor(p.id)}">${p.av}<span class="phase ph-${ph}"></span></div><div class="spec-name">${p.name}</div><div class="spec-alias">${p.alias||p.spec||''}</div><div class="spec-stats"><div class="spec-stat"><div class="sv">${pe.length}</div><div class="sl">ENTRADAS</div></div><div class="spec-stat"><div class="sv" style="color:${U.roi(pe)>=0?'var(--green)':'var(--red)'}">${U.pct(U.roi(pe))}</div><div class="sl">ROI</div></div></div></div>`}).join('')}</div>`:'<div style="font-size:11px;color:var(--text-muted)">Nenhum participante neste grupo</div>'}</div>`}).join('')}</div>`;
+      ${gs.filter(g=>g.id!=='conselho-rdt').map(g=>{const gp=ps.filter(p=>p.group===g.id);return`<div style="margin-bottom:20px"><div style="font-family:var(--font-display);font-size:12px;letter-spacing:1.5px;color:var(--accent);margin-bottom:10px">${g.name}</div>${gp.length?`<div class="spec-grid">${gp.map(p=>this.specCard(p,ent)).join('')}</div>`:'<div style="font-size:11px;color:var(--text-muted)">Nenhum participante neste grupo</div>'}</div>`}).join('')}</div>`;
   },
   pgRanking(){
     const ent=DB.entries().filter(e=>e.state!=='descartada'),gs=DB.groups(),ps=DB.participants();
     const gr=gs.map(g=>{const ge=ent.filter(e=>e.group===g.id);return{name:g.name,cnt:ge.length,g:ge.filter(e=>e.status==='green').length,r:ge.filter(e=>e.status==='red').length,v:ge.filter(e=>e.status==='void').length,roi:U.roi(ge),u:U.totalU(ge),wr:U.wr(ge),ao:U.avgOdd(ge)}}).sort((a,b)=>b.u-a.u);
-    const pr=ps.map(p=>{const pe=ent.filter(e=>e.participant===p.id);return{id:p.id,name:p.name,av:p.av,grp:gs.find(g=>g.id===p.group)?.name||'',cnt:pe.length,g:pe.filter(e=>e.status==='green').length,r:pe.filter(e=>e.status==='red').length,roi:U.roi(pe),u:U.totalU(pe),wr:U.wr(pe)}}).filter(p=>p.cnt>0).sort((a,b)=>b.u-a.u);
+    const pr=ps.map(p=>{const pe=ent.filter(e=>e.participant===p.id);return{id:p.id,name:p.name,av:p.av,avatar:p.avatar,grp:gs.find(g=>g.id===p.group)?.name||'',cnt:pe.length,g:pe.filter(e=>e.status==='green').length,r:pe.filter(e=>e.status==='red').length,roi:U.roi(pe),u:U.totalU(pe),wr:U.wr(pe)}}).filter(p=>p.cnt>0).sort((a,b)=>b.u-a.u);
     return`<div><div class="page-hd"><div class="page-title">RANKING SHARKS</div></div>
       <div class="panel" style="margin-bottom:14px"><div class="panel-hd"><div class="panel-title">RANKING DE GRUPOS</div></div>
         ${gr.map((g,i)=>`<div class="rank-row"><div class="rank-pos ${i<3?['rp1','rp2','rp3'][i]:''}">${i+1}</div><div class="rank-info"><div class="rank-name">${g.name}</div><div class="rank-sub">${g.cnt} apostas &middot; ${g.g}G / ${g.r}R / ${g.v}V</div></div><div class="rank-stats"><div class="rank-stat"><div class="rv" style="color:${g.u>=0?'var(--green)':'var(--red)'}">${U.units(g.u)}</div><div class="rl">UNID.</div></div><div class="rank-stat"><div class="rv" style="color:${g.roi>=0?'var(--green)':'var(--red)'}">${U.pct(g.roi)}</div><div class="rl">ROI</div></div><div class="rank-stat"><div class="rv">${g.wr.toFixed(0)}%</div><div class="rl">ACERTO</div></div><div class="rank-stat"><div class="rv">${g.ao.toFixed(2)}</div><div class="rl">ODD MD.</div></div></div></div>`).join('')}
       </div>
       <div class="panel"><div class="panel-hd"><div class="panel-title">RANKING INDIVIDUAL</div></div>
-        ${pr.map((p,i)=>`<div class="rank-row" data-pid="${p.id}"><div class="rank-pos ${i<3?['rp1','rp2','rp3'][i]:''}">${i+1}</div><div class="avatar" style="background:${U.avColor(p.id)};width:28px;height:28px;font-size:9px">${p.av}</div><div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">${p.grp} &middot; ${p.cnt} &middot; ${p.g}G / ${p.r}R</div></div><div class="rank-stats"><div class="rank-stat"><div class="rv" style="color:${p.u>=0?'var(--green)':'var(--red)'}">${U.units(p.u)}</div><div class="rl">UNID.</div></div><div class="rank-stat"><div class="rv" style="color:${p.roi>=0?'var(--green)':'var(--red)'}">${U.pct(p.roi)}</div><div class="rl">ROI</div></div><div class="rank-stat"><div class="rv">${p.wr.toFixed(0)}%</div><div class="rl">ACERTO</div></div></div></div>`).join('')}
+        ${pr.map((p,i)=>{const avInner=p.avatar?'<img src="'+p.avatar+'" class="avatar-img" style="width:28px;height:28px">':p.av;return`<div class="rank-row" data-pid="${p.id}"><div class="rank-pos ${i<3?['rp1','rp2','rp3'][i]:''}">${i+1}</div><div class="avatar" style="background:${p.avatar?'none':U.avColor(p.id)};width:28px;height:28px;font-size:9px">${avInner}</div><div class="rank-info"><div class="rank-name">${p.name}</div><div class="rank-sub">${p.grp} &middot; ${p.cnt} &middot; ${p.g}G / ${p.r}R</div></div><div class="rank-stats"><div class="rank-stat"><div class="rv" style="color:${p.u>=0?'var(--green)':'var(--red)'}">${U.units(p.u)}</div><div class="rl">UNID.</div></div><div class="rank-stat"><div class="rv" style="color:${p.roi>=0?'var(--green)':'var(--red)'}">${U.pct(p.roi)}</div><div class="rl">ROI</div></div><div class="rank-stat"><div class="rv">${p.wr.toFixed(0)}%</div><div class="rl">ACERTO</div></div></div></div>`}).join('')}
       </div></div>`;
   },
   pgMercados(){
@@ -1360,7 +1413,7 @@ const App={
     const bm=Object.entries(mp).map(([m,l])=>({m,roi:U.roi(l),cnt:l.length})).filter(m=>m.cnt>=2).sort((a,b)=>b.roi-a.roi).slice(0,5);
     this.currentPid=pid;
     return`<div><div style="margin-bottom:10px"><button class="btn-ghost btn-sm" onclick="App.go('especialistas')">&#8592; Voltar</button></div>
-      <div class="prof-hd"><div class="prof-av" style="background:${U.avColor(p.id)}">${p.av}</div><div class="prof-info"><h2>${p.name}</h2><div class="prof-alias">${p.alias||''}</div><div class="prof-group">${g?g.name:''} ${p.spec?'&middot; '+p.spec:''}</div></div>
+      <div class="prof-hd"><div class="prof-av" style="background:${p.avatar?'none':U.avColor(p.id)}">${p.avatar?'<img src="'+p.avatar+'" class="avatar-img" style="width:60px;height:60px">':p.av}</div><div class="prof-info"><h2>${p.name}</h2><div class="prof-alias">${p.alias||''}</div><div class="prof-group">${g?g.name:''} ${p.spec?'&middot; '+p.spec:''}</div></div><button class="btn-ghost btn-sm" onclick="App.editPart('${p.id}')" style="margin-left:auto;flex-shrink:0">&#9998; EDITAR</button>
         <div class="prof-stats"><div class="prof-stat"><div class="pv">${ent.length}</div><div class="pl">ENTRADAS</div></div><div class="prof-stat"><div class="pv pos">${greens}</div><div class="pl">GREENS</div></div><div class="prof-stat"><div class="pv neg">${reds}</div><div class="pl">REDS</div></div><div class="prof-stat"><div class="pv" style="color:var(--void)">${voids}</div><div class="pl">VOIDS</div></div><div class="prof-stat"><div class="pv" style="color:${roi>=0?'var(--green)':'var(--red)'}">${U.pct(roi)}</div><div class="pl">ROI</div></div><div class="prof-stat"><div class="pv" style="color:${u>=0?'var(--green)':'var(--red)'}">${U.units(u)}</div><div class="pl">UNID.</div></div><div class="prof-stat"><div class="pv">${ao.toFixed(2)}</div><div class="pl">ODD MD.</div></div><div class="prof-stat"><div class="pv acc">${wr.toFixed(0)}%</div><div class="pl">ACERTO</div></div></div>
       </div>
       ${ent.length<20?'<div class="insight insight-warn" style="margin-bottom:10px"><span class="insight-icon">&#9888;</span><span>AMOSTRA PEQUENA</span></div>':''}
@@ -1405,7 +1458,7 @@ const App={
     }
     if(page==='analises'){document.getElementById('btn-new-a')?.addEventListener('click',()=>this.openM('m-analysis'))}
     if(page==='fomo'){document.getElementById('btn-new-f')?.addEventListener('click',()=>this.openM('m-fomo'))}
-    if(page==='especialistas'){document.getElementById('btn-new-part')?.addEventListener('click',()=>this.openM('m-participant'));document.getElementById('btn-new-grp')?.addEventListener('click',()=>this.openM('m-group'))}
+    if(page==='especialistas'){document.getElementById('btn-new-part')?.addEventListener('click',()=>this.openM('m-participant'));document.getElementById('btn-new-grp')?.addEventListener('click',()=>this.openM('m-group'));document.querySelectorAll('[data-edit-pid]').forEach(b=>{b.onclick=ev=>{ev.stopPropagation();this.editPart(b.dataset.editPid)}})}
     if(page==='diario'){document.getElementById('btn-new-d')?.addEventListener('click',()=>this.openM('m-diary'))}
     if(page==='pesquisa'){document.getElementById('gsearch')?.addEventListener('input',e=>{const r=document.getElementById('sresults');if(r){r.innerHTML=this.searchResults(e.target.value);r.querySelectorAll('.search-result').forEach(sr=>sr.onclick=()=>{if(sr.dataset.stype==='entry')this.showDetail(sr.dataset.sid);else if(sr.dataset.stype==='participant')this.go('perfil',sr.dataset.sid)})}})}
     if(page==='mercados'){
@@ -1573,9 +1626,36 @@ const App={
     const b=DB.banca();b.initial=Number(document.getElementById('b-init').value)||5000;b.unitValue=Number(document.getElementById('b-unit').value)||50;
     DB.saveBanca(b);this.closeM('m-banca');this.updateBanca();U.toast('Banca atualizada!');this.go(this.page)},
   savePart(){
+    const editId=document.getElementById('p-edit-id').value;
     const o={name:document.getElementById('p-name').value,alias:document.getElementById('p-alias').value,group:document.getElementById('p-group').value,spec:document.getElementById('p-spec').value};
+    const avatarData=document.getElementById('p-avatar-data').value;
+    if(avatarData)o.avatar=avatarData;
     if(!o.name){U.toast('Informe o nome','err');return}
-    DB.addParticipant(o);this.closeM('m-participant');this.clearM('m-participant');U.toast('Participante adicionado!');this.go(this.page)},
+    if(editId){DB.updateParticipant(editId,o);U.toast('Participante atualizado!')}
+    else{DB.addParticipant(o);U.toast('Participante adicionado!')}
+    this.closeM('m-participant');this.clearM('m-participant');document.getElementById('p-edit-id').value='';document.getElementById('p-avatar-data').value='';this.go(this.page)},
+  editPart(pid){
+    const p=DB.participants().find(x=>x.id===pid);if(!p)return;
+    this.openM('m-participant');
+    document.getElementById('part-modal-title').textContent='EDITAR PARTICIPANTE';
+    document.getElementById('btn-save-part').textContent='SALVAR';
+    document.getElementById('btn-del-part').style.display='';
+    document.getElementById('p-edit-id').value=p.id;
+    document.getElementById('p-name').value=p.name||'';
+    document.getElementById('p-alias').value=p.alias||'';
+    document.getElementById('p-spec').value=p.spec||'';
+    const pv=document.getElementById('p-av-preview');
+    if(p.avatar){document.getElementById('p-avatar-data').value=p.avatar;pv.innerHTML='<img src="'+p.avatar+'" class="avatar-img">';pv.style.background='none';pv.style.borderStyle='solid'}
+    else{pv.innerHTML=p.av||'';pv.style.background=U.avColor(p.id);pv.style.borderStyle='dashed';document.getElementById('p-avatar-data').value=''}
+    setTimeout(()=>{const gs=document.getElementById('p-group');if(gs)gs.value=p.group||''},50);
+  },
+  deletePart(){
+    const editId=document.getElementById('p-edit-id').value;if(!editId)return;
+    const p=DB.participants().find(x=>x.id===editId);
+    if(!confirm('Excluir participante "'+(p?p.name:'')+'"? As entradas vinculadas não serão apagadas.'))return;
+    DB.deleteParticipant(editId);this.closeM('m-participant');this.clearM('m-participant');
+    document.getElementById('p-edit-id').value='';document.getElementById('p-avatar-data').value='';
+    U.toast('Participante excluído!');this.go('especialistas')},
   saveGroup(){
     const n=document.getElementById('g-name').value;if(!n){U.toast('Informe o nome','err');return}
     DB.addGroup(n.toUpperCase());this.closeM('m-group');this.clearM('m-group');U.toast('Grupo criado!');this.go(this.page)},
