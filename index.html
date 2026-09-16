@@ -949,7 +949,7 @@ const DB={
   _cloud:null,_downloads:null,_syncing:false,_refreshTimer:null,
   _g(k){try{const d=localStorage.getItem('rdt_'+k);return d?JSON.parse(d):null}catch{return null}},
   _s(k,v){
-    try{localStorage.setItem('rdt_'+k,JSON.stringify(v))}catch{}
+    try{localStorage.setItem('rdt_'+k,JSON.stringify(v))}catch(err){U.toast('Erro ao salvar: espaço insuficiente no navegador','err');console.error('localStorage save failed for',k,err)}
     if(this._cloud&&!this._syncing){
       this._cloud.doc('state/'+k).set({v:v,t:Date.now()}).catch(()=>{});
       this._showSync();
@@ -1154,18 +1154,23 @@ const App={
     document.getElementById('p-avatar-input').onchange=(ev)=>{
       const f=ev.target.files[0];if(!f)return;
       if(f.size>10485760){U.toast('Imagem muito grande (máx 10MB)','err');return}
+      const btn=document.getElementById('btn-save-part');btn.disabled=true;btn.textContent='PROCESSANDO...';
       const img=new Image();const url=URL.createObjectURL(f);
       img.onload=()=>{
-        const max=256,w=img.width,h=img.height;
-        let nw=w,nh=h;if(w>max||h>max){if(w>h){nw=max;nh=Math.round(h*max/w)}else{nh=max;nw=Math.round(w*max/h)}}
-        const cv=document.createElement('canvas');cv.width=nw;cv.height=nh;
-        cv.getContext('2d').drawImage(img,0,0,nw,nh);
-        const data=cv.toDataURL('image/jpeg',0.85);
-        URL.revokeObjectURL(url);
-        document.getElementById('p-avatar-data').value=data;
-        const pv=document.getElementById('p-av-preview');
-        pv.innerHTML='<img src="'+data+'" class="avatar-img">';pv.style.background='none';pv.style.borderStyle='solid';
-      };img.src=url;
+        try{
+          const max=200,w=img.width,h=img.height;
+          let nw=w,nh=h;if(w>max||h>max){if(w>h){nw=max;nh=Math.round(h*max/w)}else{nh=max;nw=Math.round(w*max/h)}}
+          const cv=document.createElement('canvas');cv.width=nw;cv.height=nh;
+          cv.getContext('2d').drawImage(img,0,0,nw,nh);
+          const data=cv.toDataURL('image/jpeg',0.75);
+          URL.revokeObjectURL(url);
+          document.getElementById('p-avatar-data').value=data;
+          const pv=document.getElementById('p-av-preview');
+          pv.innerHTML='<img src="'+data+'" class="avatar-img">';pv.style.background='none';pv.style.borderStyle='solid';
+        }catch(err){U.toast('Erro ao processar imagem','err');console.error(err)}
+        btn.disabled=false;btn.textContent=document.getElementById('p-edit-id').value?'SALVAR':'REGISTRAR';
+      };img.onerror=()=>{URL.revokeObjectURL(url);U.toast('Erro ao carregar imagem','err');btn.disabled=false;btn.textContent=document.getElementById('p-edit-id').value?'SALVAR':'REGISTRAR'};
+      img.src=url;
     };
     document.getElementById('btn-backup').onclick=()=>this.openBackup();
     document.getElementById('btn-backup-export').onclick=()=>this.backupExport();
